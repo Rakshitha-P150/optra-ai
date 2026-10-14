@@ -1,0 +1,17 @@
+
+# Frontend dependencies
+node_modules/
+dist/
+
+# Java backend build files
+target/
+
+# Secret files
+.env
+.env.*
+!.env.example
+
+# Logs and IDE files
+*.log
+.idea/
+.vscode/
