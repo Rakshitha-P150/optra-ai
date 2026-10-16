@@ -337,9 +337,9 @@ function App() {
       }
     } catch (error) {
       console.error(error);
-      showMessage(
-        "Backend connection failed. Start Spring Boot on port 8080."
-      );
+     showMessage(
+     "Unable to connect to the deployed backend. Please try again."
+    );
     } finally {
       setLoading(false);
     }
