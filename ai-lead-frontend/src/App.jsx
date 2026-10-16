@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-const API_URL = "http://localhost:8080/api/leads";
+const API_URL = "https://optra-ai.onrender.com/api/leads";
+
 
 const EMPTY_LEAD = {
   name: "",
