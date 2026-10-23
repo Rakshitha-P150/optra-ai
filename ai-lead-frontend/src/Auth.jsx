@@ -1,4 +1,4 @@
-import { useState, useEffect  } from "react";
+﻿import { useState, useEffect  } from "react";
 import "./Auth.css";
 
 export default function Auth({ onLogin }) {
@@ -52,7 +52,7 @@ if (!strongPassword.test(password)) {
 
       try {
         const response = await fetch(
-          "http://localhost:8080/api/auth/register",
+          "https://optra-ai.onrender.com/api/auth/register",
           {
             method: "POST",
             headers: {
@@ -93,7 +93,7 @@ if (!strongPassword.test(password)) {
    
 try {
   const response = await fetch(
-    "http://localhost:8080/api/auth/login",
+    "https://optra-ai.onrender.com/api/auth/login",
     {
       method: "POST",
       headers: {
@@ -171,7 +171,7 @@ onLogin(data);
           </div>
         </div>
 
-        <p className="auth-footer">OPTRA AI · Lead Recovery System</p>
+        <p className="auth-footer">OPTRA AI Â· Lead Recovery System</p>
       </section>
 
       <section className="auth-form-side">
@@ -300,7 +300,7 @@ onLogin(data);
   }
 
   try {
-    const response = await fetch("http://localhost:8080/api/auth/forgot-password", {
+    const response = await fetch("https://optra-ai.onrender.com/api/auth/forgot-password", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -348,7 +348,7 @@ onLogin(data);
 
             <button className="auth-submit" type="submit">
               {mode === "login" ? "Sign in to OPTRA AI" : "Create account"}
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true">â†’</span>
             </button>
           </form>
 
@@ -370,3 +370,4 @@ onLogin(data);
     </main>
   );
 }
+
