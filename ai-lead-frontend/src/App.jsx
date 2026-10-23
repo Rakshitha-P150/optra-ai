@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import Auth from "./Auth";
 
 const API_URL = "https://optra-ai.onrender.com/api/leads";
 
@@ -279,10 +280,15 @@ Mysore`;
 }
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+  () => localStorage.getItem("optra_logged_in") === "true"
+);
   const [leads, setLeads] = useState([]);
+  const [recycleBinLeads, setRecycleBinLeads] = useState([]);
   const [page, setPage] = useState("dashboard");
 
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
 
   const [showAdd, setShowAdd] = useState(false);
@@ -344,6 +350,47 @@ function App() {
       setLoading(false);
     }
   };
+  
+const loadRecycleBin = async () => {
+  try {
+    const response = await fetch(`${API_URL}/recycle-bin`);
+
+    if (!response.ok) {
+      throw new Error("Failed to load Recycle Bin");
+    }
+
+    const data = await response.json();
+    setRecycleBinLeads(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error("Recycle Bin error:", error);
+    showMessage("Could not load deleted leads.");
+  }
+};
+
+const restoreLead = async (id) => {
+  try {
+    setLoading(true);
+
+    const response = await fetch(`${API_URL}/${id}/recover`, {
+      method: "PUT"
+    });
+
+    if (!response.ok) {
+      throw new Error("Restore failed");
+    }
+
+    await loadRecycleBin();
+    await loadLeads();
+
+    showMessage("Lead restored successfully.");
+  } catch (error) {
+    console.error("Restore error:", error);
+    showMessage("Could not restore lead.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     loadLeads();
@@ -450,7 +497,7 @@ function App() {
   };
 
   const deleteLead = async (id) => {
-    if (!window.confirm("Delete this lead permanently?")) {
+   if (!window.confirm("Move this lead to the Recycle Bin?")) {
       return;
     }
 
@@ -471,7 +518,7 @@ function App() {
 
       setDetailsLead(null);
 
-      showMessage("Lead deleted successfully.");
+      showMessage("Lead moved to Recycle Bin successfully.");
     } catch (error) {
       console.error(error);
       showMessage("Delete failed. Check DELETE API.");
@@ -677,6 +724,14 @@ function App() {
     .sort((a, b) => riskScore(b) - riskScore(a))
     .slice(0, 5);
 
+  if (!isAuthenticated) {
+  return (
+    <Auth
+      onLogin={() => setIsAuthenticated(true)}
+    />
+  );
+}
+
   return (
     <div className="app">
       <aside
@@ -712,9 +767,49 @@ function App() {
             </button>
           ))}
         </nav>
+<div className="more-menu-container">
+  <button
+    className={`more-menu-button ${moreMenuOpen ? "active" : ""}`}
+    onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+  >
+    <span className="more-menu-icon">☰</span>
+    <span>More</span>
+   
+<span className={`more-menu-arrow ${moreMenuOpen ? "open" : ""}`}>
+  ›
+</span>
 
+  </button>
+
+  {moreMenuOpen && (
+    <div className="more-menu-dropdown">
+      <button
+        className="more-menu-item"
+       onClick={() => {
+  setMoreMenuOpen(false);
+  setPage("recycle-bin");
+  loadRecycleBin();
+}}
+      >
+        <span>▤</span>
+        Recycle Bin
+      </button>
+
+      <button
+        className="more-menu-item"
+        onClick={() => {
+          localStorage.removeItem("optra_logged_in");
+          setIsAuthenticated(false);
+          setMoreMenuOpen(false);
+        }}
+      >
+        <span>↪</span>
+        Sign Out
+      </button>
+    </div>
+  )}
+</div>
         <div className="assistant-card">
-          <span>✨</span>
           <b>OPTRA AI Assistant</b>
           <small>
             Ask about leads, risks and follow-ups.
@@ -725,7 +820,7 @@ function App() {
           >
             Open Assistant
           </button>
-        </div>
+               </div>
       </aside>
 
       <main className="main">
@@ -741,19 +836,17 @@ function App() {
             </button>
 
             <div>
-              <b>
-                {page === "dashboard"
-                  ? "OPTRA AI Dashboard"
-                  : page === "leads"
-                  ? "Lead Management"
-                  : page === "followups"
-                  ? "Follow-up Center"
-                  : page === "ai"
-                  ? "AI Intelligence"
-                  : page === "reports"
-                  ? "Business Reports"
-                  : "AI Message Studio"}
-              </b>
+             
+<b>
+  {page === "dashboard" ? "OPTRA AI Dashboard"
+  : page === "leads" ? "Lead Management"
+  : page === "followups" ? "Follow-up Center"
+  : page === "ai" ? "AI Intelligence"
+  : page === "reports" ? "Business Reports"
+  : page === "recycle-bin" ? "Recycle Bin"
+  : "AI Message Studio"}
+</b>
+
 
               <small>
                 Smart customer recovery • Mysore
@@ -765,7 +858,6 @@ function App() {
             <button
               className="refresh-btn"
               onClick={() => loadLeads(true)}
-              disabled={loading}
             >
               ↻ Refresh
             </button>
@@ -860,6 +952,53 @@ function App() {
               setPlatform={setMessagePlatform}
             />
           )}
+          
+
+{page === "recycle-bin" && (
+  <div className="leads-page">
+    <div className="leads-hero">
+      <div>
+        <h1>Recycle Bin</h1>
+        <p>Restore deleted leads and recover opportunities.</p>
+      </div>
+    </div>
+
+    <div className="content-card">
+      <div className="section-head">
+        <div>
+          <span className="section-eyebrow">LEAD MANAGEMENT</span>
+          <h2>Deleted Leads</h2>
+          <p>
+            {recycleBinLeads.length} deleted lead
+            {recycleBinLeads.length === 1 ? "" : "s"}
+          </p>
+        </div>
+      </div>
+
+      
+{recycleBinLeads.length > 0 ? (
+  <LeadTable
+    leads={recycleBinLeads}
+    setDetailsLead={() => {}}
+    setAiLead={() => {}}
+    openEdit={() => {}}
+    deleteLead={() => {}}
+    showEdit={false}
+    restoreLead={restoreLead}
+    isRecycleBin={true}
+  />
+) : (
+  <Empty
+    title="Recycle Bin is empty"
+    text="Deleted leads will appear here."
+  />
+)}
+
+    </div>
+  </div>
+)}
+
+
         </section>
 
         <Footer />
@@ -2019,14 +2158,18 @@ function MessagesPage({
    COMPONENTS
 ========================= */
 
+
 function LeadTable({
   leads,
   setDetailsLead,
   setAiLead,
   openEdit,
   deleteLead,
-  showEdit
+  showEdit,
+  restoreLead,
+  isRecycleBin = false
 }) {
+
   return (
     <div className="table-wrap">
       <div className="lead-table">
@@ -2085,41 +2228,52 @@ function LeadTable({
                 </span>
               </div>
 
-              <div
-                className="table-actions"
-                onClick={(e) =>
-                  e.stopPropagation()
-                }
-              >
-                <button
-                  title="AI Analysis"
-                  onClick={() =>
-                    setAiLead(lead)
-                  }
-                >
-                  ✨
-                </button>
+              
+<div
+  className="table-actions"
+  onClick={(e) => e.stopPropagation()}
+>
+  {isRecycleBin ? (
+   
 
-                {showEdit && (
-                  <button
-                    title="Edit"
-                    onClick={() =>
-                      openEdit(lead)
-                    }
-                  >
-                    ✏️
-                  </button>
-                )}
+<button
+  className="restore-btn"
+  title="Restore lead"
+  onClick={() => restoreLead(lead.id)}
+>
+  <span aria-hidden="true">↶</span>
+  Restore
+</button>
 
-                <button
-                  title="Delete"
-                  onClick={() =>
-                    deleteLead(lead.id)
-                  }
-                >
-                  🗑️
-                </button>
-              </div>
+
+  ) : (
+    <>
+      <button
+        title="AI Analysis"
+        onClick={() => setAiLead(lead)}
+      >
+        ✨
+      </button>
+
+      {showEdit && (
+        <button
+          title="Edit"
+          onClick={() => openEdit(lead)}
+        >
+          ✏️
+        </button>
+      )}
+
+      <button
+        title="Delete"
+        onClick={() => deleteLead(lead.id)}
+      >
+        🗑️
+      </button>
+    </>
+  )}
+</div>
+
             </div>
           );
         })}
@@ -2324,7 +2478,7 @@ function AddLeadModal({
             <button
               type="submit"
               className="primary-btn"
-              disabled={loading}
+
             >
               {loading
                 ? "Saving..."
