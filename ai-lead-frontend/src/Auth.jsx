@@ -1,4 +1,4 @@
-﻿import { useState, useEffect  } from "react";
+import { useState, useEffect  } from "react";
 import "./Auth.css";
 
 export default function Auth({ onLogin }) {
@@ -121,7 +121,8 @@ try {
   localStorage.removeItem("optraRememberedEmail");
 }
 
-onLogin(data);
+localStorage.setItem("optra_logged_in", "true");
+      onLogin(data);
 } catch (err) {
   setError(
     "Cannot connect to the server. Make sure Spring Boot is running."
@@ -171,7 +172,7 @@ onLogin(data);
           </div>
         </div>
 
-        <p className="auth-footer">OPTRA AI Â· Lead Recovery System</p>
+        <p className="auth-footer">OPTRA AI · Lead Recovery System</p>
       </section>
 
       <section className="auth-form-side">
@@ -348,7 +349,7 @@ onLogin(data);
 
             <button className="auth-submit" type="submit">
               {mode === "login" ? "Sign in to OPTRA AI" : "Create account"}
-              <span aria-hidden="true">â†’</span>
+              <span aria-hidden="true">→</span>
             </button>
           </form>
 
